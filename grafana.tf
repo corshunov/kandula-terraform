@@ -34,9 +34,17 @@ data "template_file" "consul_grafana" {
   }
 }
 
+data "template_file" "grafana" {
+  template = file("${path.module}/input_files/grafana.sh.tpl")
+}
+
 data "template_cloudinit_config" "grafana" {
   part {
     content = data.template_file.consul_grafana.rendered
+  }
+
+  part {
+    content = data.template_file.grafana.rendered
   }
 }
 
@@ -52,29 +60,6 @@ resource "aws_instance" "grafana_server" {
   tags = {
     Name    = "Grafana Server"
   }
-
-  #connection {
-    #host        = "${self.public_ip}"
-    #user        = "root"
-    #type        = "ssh"
-    #private_key = "${local_file.grafana_server_private_key.filename}"
-    #timeout     = "2m"
-  #}
-
-  #provisioner "file" {
-    #source      = "${path.module}/input_files/grafana.ini"
-    #destination = "/home/ubuntu/grafana.ini"
-  #}
-
-  #provisioner "file" {
-    #source      = "${path.module}/input_files/docker-compose.yml"
-    #destination = "/home/ubuntu/docker-compose.yml"
-  #}
-
-  #provisioner "file" {
-    #source      = "${path.module}/input_files/grafana.sh"
-    #destination = "/home/ubuntu/grafana.sh"
-  #}
 }
 
 resource "aws_lb" "grafana_server" {

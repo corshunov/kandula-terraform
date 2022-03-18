@@ -17,7 +17,7 @@ scrape_configs:
     - source_labels: ['__address__']
       target_label: '__address__'
       regex: '(.*):(.*)'
-      replacement: '$$1:9100'
+      replacement: '\$${1}:9100'
     - source_labels: ['__meta_consul_node']
       target_label: 'instance'
 
@@ -41,7 +41,7 @@ scrape_configs:
     - source_labels: ['__address__']
       target_label: '__address__'
       regex: '(.*):(.*)'
-      replacement: '$$1:8500'
+      replacement: '\$${1}:8500'
 
   - job_name: 'grafana'
     consul_sd_configs:
@@ -52,10 +52,24 @@ scrape_configs:
     - source_labels: ['__address__']
       target_label: '__address__'
       regex: '(.*):(.*)'
-      replacement: '$$1:3000'
+      replacement: '\$${1}:3000'
     - source_labels: ['__address__']
       target_label: 'instance'
       replacement: 'grafana'
+
+  - job_name: 'postgres'
+    consul_sd_configs:
+    - server: 'localhost:8500'
+      services:
+      - postgres
+    relabel_configs:
+    - source_labels: ['__address__']
+      target_label: '__address__'
+      regex: '(.*):(.*)'
+      replacement: '\$${1}:9187'
+    - source_labels: ['__address__']
+      target_label: 'instance'
+      replacement: 'postgres'
 EOF
 
 # Configure promcol service

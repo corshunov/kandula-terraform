@@ -34,9 +34,17 @@ data "template_file" "consul_postgres" {
   }
 }
 
+data "template_file" "postgres" {
+  template = file("${path.module}/input_files/postgres.sh.tpl")
+}
+
 data "template_cloudinit_config" "postgres" {
   part {
     content = data.template_file.consul_postgres.rendered
+  }
+
+  part {
+    content = data.template_file.postgres.rendered
   }
 }
 

@@ -47,8 +47,8 @@ data "template_file" "prometheus" {
 data "template_cloudinit_config" "prometheus" {
   part {
     content = data.template_file.consul_prometheus.rendered
-
   }
+
   part {
     content = data.template_file.prometheus.rendered
   }

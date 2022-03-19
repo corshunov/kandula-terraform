@@ -5,7 +5,7 @@ resource "tls_private_key" "prometheus" {
 }
 
 resource "local_sensitive_file" "prometheus_private_key" {
-  sensitive_content = tls_private_key.prometheus.private_key_pem
+  content = tls_private_key.prometheus.private_key_pem
   filename          = "${local.keys_path}/prometheus.pem"
   file_permission   = "0400"
 }
@@ -55,7 +55,7 @@ data "template_cloudinit_config" "prometheus" {
 # Instance.
 resource "aws_instance" "prometheus" {
   ami                         = data.aws_ami.ubuntu_18.id
-  instance_type               = var.instance_type
+  instance_type               = var.prometheus_instance_type
   key_name                    = aws_key_pair.prometheus.key_name
   subnet_id                   = aws_subnet.private.*.id[1]
   vpc_security_group_ids      = [aws_security_group.consul.id]

@@ -5,7 +5,7 @@ resource "tls_private_key" "bastion" {
 }
 
 resource "local_sensitive_file" "bastion_private_key" {
-  sensitive_content = tls_private_key.bastion.private_key_pem
+  content = tls_private_key.bastion.private_key_pem
   filename          = "${local.keys_path}/bastion.pem"
   file_permission   = "0400"
 }
@@ -28,15 +28,6 @@ resource "aws_security_group_rule" "bastion_ssh_ingress" {
   from_port   = 22
   to_port     = 22
   cidr_blocks = ["${data.http.local_ip.body}/32"]
-  security_group_id = aws_security_group.bastion.id
-}
-
-resource "aws_security_group_rule" "bastion_all_egress" {
-  type        = "egress"
-  protocol    = -1
-  from_port   = 0
-  to_port     = 0
-  cidr_blocks = ["0.0.0.0/0"]
   security_group_id = aws_security_group.bastion.id
 }
 
@@ -75,7 +66,7 @@ data "template_cloudinit_config" "bastion" {
 # Instance.
 resource "aws_instance" "bastion" {
   ami                         = data.aws_ami.ubuntu_18.id
-  instance_type               = var.instance_type
+  instance_type               = var.bastion_instance_type
   key_name                    = aws_key_pair.bastion.key_name
   subnet_id                   = aws_subnet.public.*.id[0]
   associate_public_ip_address = true

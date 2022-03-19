@@ -5,7 +5,7 @@ resource "tls_private_key" "postgres" {
 }
 
 resource "local_sensitive_file" "postgres_private_key" {
-  sensitive_content = tls_private_key.postgres.private_key_pem
+  content = tls_private_key.postgres.private_key_pem
   filename          = "${local.keys_path}/postgres.pem"
   file_permission   = "0400"
 }
@@ -50,7 +50,7 @@ data "template_cloudinit_config" "postgres" {
 # Instance.
 resource "aws_instance" "postgres" {
   ami                         = data.aws_ami.ubuntu_18.id
-  instance_type               = var.instance_type
+  instance_type               = var.postgres_instance_type
   key_name                    = aws_key_pair.postgres.key_name
   subnet_id                   = aws_subnet.private.*.id[0]
   vpc_security_group_ids      = [aws_security_group.consul.id]

@@ -38,3 +38,5 @@ tee /etc/consul.d/jenkins_agent.json > /dev/null <<"EOF"
   }
 }
 EOF
+
+consul reload

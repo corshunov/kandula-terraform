@@ -42,6 +42,8 @@ scrape_configs:
       target_label: '__address__'
       regex: '(.*):(.*)'
       replacement: '\$${1}:8500'
+    - source_labels: ['__meta_consul_node']
+      target_label: 'instance'
 
   - job_name: 'grafana'
     consul_sd_configs:

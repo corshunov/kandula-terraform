@@ -13,7 +13,42 @@ variable "az_count" {
   default = 2
 }
 
-variable "instance_type" {
+variable "bastion_instance_type" {
+  type    = string
+  default = "t2.micro"
+}
+
+variable "consul_instance_type" {
+  type    = string
+  default = "t2.micro"
+}
+
+variable "elasticsearch_instance_type" {
+  type    = string
+  default = "t3.medium"
+}
+
+variable "jenkins_main_instance_type" {
+  type    = string
+  default = "t2.micro"
+}
+
+variable "jenkins_agent_instance_type" {
+  type    = string
+  default = "t2.micro"
+}
+
+variable "grafana_instance_type" {
+  type    = string
+  default = "t2.micro"
+}
+
+variable "postgres_instance_type" {
+  type    = string
+  default = "t2.micro"
+}
+
+variable "prometheus_instance_type" {
   type    = string
   default = "t2.micro"
 }

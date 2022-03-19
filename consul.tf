@@ -5,7 +5,7 @@ resource "tls_private_key" "consul" {
 }
 
 resource "local_sensitive_file" "consul_private_key" {
-  sensitive_content = tls_private_key.consul.private_key_pem
+  content = tls_private_key.consul.private_key_pem
   filename          = "${local.keys_path}/consul.pem"
   file_permission   = "0400"
 }
@@ -16,42 +16,10 @@ resource "aws_key_pair" "consul" {
 }
 
 
-# Profile.
-resource "aws_iam_role" "consul" {
-  name               = "consul"
-  assume_role_policy = file("${local.roles_path}/consul.json")
-}
-
-resource "aws_iam_policy" "describe_instances" {
-  name        = "describe_instances"
-  policy      = file("${local.policies_path}/describe_instances.json")
-}
-
-resource "aws_iam_policy_attachment" "consul" {
-  name       = "consul"
-  roles      = [aws_iam_role.consul.name]
-  policy_arn = aws_iam_policy.describe_instances.arn
-}
-
-resource "aws_iam_instance_profile" "consul" {
-  name  = "consul"
-  role = aws_iam_role.consul.name
-}
-
-
 # Security group.
 resource "aws_security_group" "consul" {
   name   = "consul"
   vpc_id = aws_vpc.vpc.id
-}
-
-resource "aws_security_group_rule" "consul_ssh_ingress" {
-  type        = "ingress"
-  protocol    = "tcp"
-  from_port   = 22
-  to_port     = 22
-  cidr_blocks = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.consul.id
 }
 
 resource "aws_security_group_rule" "consul_all_inside_ingress" {
@@ -63,25 +31,7 @@ resource "aws_security_group_rule" "consul_all_inside_ingress" {
   security_group_id = aws_security_group.consul.id
 }
 
-resource "aws_security_group_rule" "consul_ui_ingress" {
-  type        = "ingress"
-  protocol    = "tcp"
-  from_port   = 8500
-  to_port     = 8500
-  cidr_blocks = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.consul.id
-}
-
-resource "aws_security_group_rule" "consul_prometheus_ingress" {
-  type        = "ingress"
-  protocol    = "tcp"
-  from_port   = 9090
-  to_port     = 9090
-  cidr_blocks = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.consul.id
-}
-
-resource "aws_security_group_rule" "consul_http_ingress" {
+resource "aws_security_group_rule" "consul_http_inside_ingress" {
   type        = "ingress"
   protocol    = "tcp"
   from_port   = 80
@@ -127,11 +77,11 @@ EOF
 resource "aws_instance" "consul" {
   count                  = var.consul_count
   ami                    = data.aws_ami.ubuntu_18.id
-  instance_type          = var.instance_type
+  instance_type          = var.consul_instance_type
   key_name               = aws_key_pair.consul.key_name
   subnet_id              = aws_subnet.private.*.id[count.index % var.az_count]
   vpc_security_group_ids = [aws_security_group.consul.id]
-  user_data              = element(data.template_file.consul.*.rendered, count.index)
+  user_data              = data.template_file.consul.*.rendered[count.index]
   iam_instance_profile   = aws_iam_instance_profile.consul.name
 
   tags = {

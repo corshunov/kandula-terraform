@@ -18,16 +18,16 @@ systemctl start kibana
 wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-oss-7.11.0-amd64.deb
 dpkg -i filebeat-*.deb
 
-tee /etc/consul.d/elastic.json > /dev/null <<"EOF"
+tee /etc/consul.d/elasticsearch.json > /dev/null <<"EOF"
 {
   "service": {
-    "id": "elastic",
-    "name": "elastic",
-    "tags": ["elastic"],
+    "id": "elasticsearch",
+    "name": "elasticsearch",
+    "tags": ["elasticsearch"],
     "port": 9300,
     "checks": [
       {
-        "id": "tcp",
+        "id": "tcp1",
         "name": "TCP on port 9300",
         "tcp": "localhost:9300",
         "interval": "10s",
@@ -47,7 +47,7 @@ tee /etc/consul.d/kibana.json > /dev/null <<"EOF"
     "port": 5601,
     "checks": [
       {
-        "id": "tcp",
+        "id": "tcp2",
         "name": "TCP on port 5601",
         "tcp": "localhost:5601",
         "interval": "10s",

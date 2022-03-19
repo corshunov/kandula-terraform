@@ -1,26 +1,29 @@
-resource "tls_private_key" "postgres_server" {
+# Key pair.
+resource "tls_private_key" "postgres" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-resource "local_file" "postgres_server_private_key" {
-  sensitive_content = tls_private_key.postgres_server.private_key_pem
-  filename          = "${path.module}/output_files/postgres_server.pem"
+resource "local_file" "postgres_private_key" {
+  sensitive_content = tls_private_key.postgres.private_key_pem
+  filename          = "${local.keys_path}/postgres.pem"
 }
 
-resource "null_resource" "postgres_server_chmod_400_key" {
+resource "null_resource" "postgres_chmod_400_key" {
   provisioner "local-exec" {
-    command = "chmod 400 ${local_file.postgres_server_private_key.filename}"
+    command = "chmod 400 ${local_file.postgres_private_key.filename}"
   }
 }
 
-resource "aws_key_pair" "postgres_server" {
-  key_name   = "postgres_server"
-  public_key = tls_private_key.postgres_server.public_key_openssh
+resource "aws_key_pair" "postgres" {
+  key_name   = "postgres"
+  public_key = tls_private_key.postgres.public_key_openssh
 }
 
+
+# User data.
 data "template_file" "consul_postgres" {
-  template = file("${path.module}/input_files/consul.sh.tpl")
+  template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
       consul_version = var.consul_version
@@ -35,7 +38,7 @@ data "template_file" "consul_postgres" {
 }
 
 data "template_file" "postgres" {
-  template = file("${path.module}/input_files/postgres.sh.tpl")
+  template = file("${local.scripts_path}/postgres.sh")
 }
 
 data "template_cloudinit_config" "postgres" {
@@ -48,16 +51,18 @@ data "template_cloudinit_config" "postgres" {
   }
 }
 
-resource "aws_instance" "postgres_server" {
+
+# Instance.
+resource "aws_instance" "postgres" {
   ami                         = data.aws_ami.ubuntu_18.id
-  instance_type               = "t2.micro"
-  key_name                    = aws_key_pair.postgres_server.key_name
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.postgres.key_name
   subnet_id                   = aws_subnet.private.*.id[0]
-  vpc_security_group_ids      = [aws_security_group.consul_server.id]
+  vpc_security_group_ids      = [aws_security_group.consul.id]
   user_data                   = data.template_cloudinit_config.postgres.rendered
-  iam_instance_profile        = aws_iam_instance_profile.consul_server.name
+  iam_instance_profile        = aws_iam_instance_profile.consul.name
 
   tags = {
-    Name    = "Postgres Server"
+    Name    = "Postgres"
   }
 }

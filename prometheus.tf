@@ -1,26 +1,29 @@
-resource "tls_private_key" "prometheus_server" {
+# Key pair.
+resource "tls_private_key" "prometheus" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-resource "local_file" "prometheus_server_private_key" {
-  sensitive_content = tls_private_key.prometheus_server.private_key_pem
-  filename          = "${path.module}/output_files/prometheus_server.pem"
+resource "local_file" "prometheus_private_key" {
+  sensitive_content = tls_private_key.prometheus.private_key_pem
+  filename          = "${local.keys_path}/prometheus.pem"
 }
 
-resource "null_resource" "prometheus_server_chmod_400_key" {
+resource "null_resource" "prometheus_chmod_400_key" {
   provisioner "local-exec" {
-    command = "chmod 400 ${local_file.prometheus_server_private_key.filename}"
+    command = "chmod 400 ${local_file.prometheus_private_key.filename}"
   }
 }
 
-resource "aws_key_pair" "prometheus_server" {
-  key_name   = "prometheus_server"
-  public_key = tls_private_key.prometheus_server.public_key_openssh
+resource "aws_key_pair" "prometheus" {
+  key_name   = "prometheus"
+  public_key = tls_private_key.prometheus.public_key_openssh
 }
 
+
+# User data.
 data "template_file" "consul_prometheus" {
-  template = file("${path.module}/input_files/consul.sh.tpl")
+  template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
       consul_version = var.consul_version
@@ -35,11 +38,10 @@ data "template_file" "consul_prometheus" {
 }
 
 data "template_file" "prometheus" {
-  template = file("${path.module}/input_files/prometheus.sh.tpl")
+  template = file("${local.templates_path}/prometheus.sh.tpl")
 
   vars = {
       prometheus_version = var.prometheus_version
-      prometheus_conf_dir = var.prometheus_conf_dir
       prometheus_dir = var.prometheus_dir
   }
 }
@@ -54,41 +56,45 @@ data "template_cloudinit_config" "prometheus" {
   }
 }
 
-resource "aws_instance" "prometheus_server" {
+
+# Instance.
+resource "aws_instance" "prometheus" {
   ami                         = data.aws_ami.ubuntu_18.id
-  instance_type               = "t2.micro"
-  key_name                    = aws_key_pair.prometheus_server.key_name
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.prometheus.key_name
   subnet_id                   = aws_subnet.private.*.id[1]
-  vpc_security_group_ids      = [aws_security_group.consul_server.id]
+  vpc_security_group_ids      = [aws_security_group.consul.id]
   user_data                   = data.template_cloudinit_config.prometheus.rendered
-  iam_instance_profile        = aws_iam_instance_profile.consul_server.name
+  iam_instance_profile        = aws_iam_instance_profile.consul.name
 
   tags = {
-    Name    = "Prometheus Server"
+    Name    = "Prometheus"
   }
 }
 
-resource "aws_lb" "prometheus_server" {
-  name                        = "prometheus-lb"
+
+# Load balancer.
+resource "aws_lb" "prometheus" {
+  name                        = "prometheus"
   internal                    = false
   load_balancer_type          = "application"
   subnets                     = aws_subnet.public.*.id
-  security_groups             = [aws_security_group.consul_server.id]
+  security_groups             = [aws_security_group.consul.id]
 }
 
-resource "aws_lb_listener" "prometheus_server" {
-  load_balancer_arn = aws_lb.prometheus_server.arn
+resource "aws_lb_listener" "prometheus" {
+  load_balancer_arn = aws_lb.prometheus.arn
   port               = 80
   protocol           = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.prometheus_server.arn
+    target_group_arn = aws_lb_target_group.prometheus.arn
   }
 }
 
-resource "aws_lb_target_group" "prometheus_server" {
-  name = "prometheus-server"
+resource "aws_lb_target_group" "prometheus" {
+  name = "prometheus"
   port = 9090
   protocol = "HTTP"
   vpc_id = aws_vpc.vpc.id
@@ -100,8 +106,8 @@ resource "aws_lb_target_group" "prometheus_server" {
   }
 }
 
-resource "aws_lb_target_group_attachment" "prometheus_server" {
-  target_group_arn = aws_lb_target_group.prometheus_server.id
-  target_id        = aws_instance.prometheus_server.id
+resource "aws_lb_target_group_attachment" "prometheus" {
+  target_group_arn = aws_lb_target_group.prometheus.id
+  target_id        = aws_instance.prometheus.id
   port             = 9090
 }

@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
-apt-get update
+apt-get update -y
 apt-get install -y apt-transport-https
 apt-get install -y software-properties-common wget
 wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
 
 echo "deb https://packages.grafana.com/oss/deb stable main" | tee -a /etc/apt/sources.list.d/grafana.list
 
-apt-get update
+apt-get update -y
 apt-get install -y grafana
 
 systemctl daemon-reload
 systemctl enable grafana-server.service
 systemctl start grafana-server.service
 
-### add grafana service to consul
 tee /etc/consul.d/grafana.json > /dev/null <<"EOF"
 {
   "service": {

@@ -5,7 +5,7 @@ echo "Grabbing IPs..."
 PRIVATE_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
 
 echo "Installing dependencies..."
-apt-get -q update
+apt-get update -y
 apt-get -yq install unzip dnsmasq
 
 echo "Configuring dnsmasq..."
@@ -55,7 +55,6 @@ EOF
 useradd consul
 chown -R consul:consul /opt/consul /etc/consul.d /run/consul
 
-
 # Configure consul service
 tee /etc/systemd/system/consul.service > /dev/null <<"EOF"
 [Unit]
@@ -81,7 +80,6 @@ EOF
 systemctl daemon-reload
 systemctl enable consul.service
 systemctl start consul.service
-
 
 ### Install Node Exporter
 wget https://github.com/prometheus/node_exporter/releases/download/v${node_exporter_version}/node_exporter-${node_exporter_version}.linux-amd64.tar.gz -O /tmp/node_exporter.tgz

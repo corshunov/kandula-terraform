@@ -1,26 +1,29 @@
-resource "tls_private_key" "grafana_server" {
+# Key pair.
+resource "tls_private_key" "grafana" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-resource "local_file" "grafana_server_private_key" {
-  sensitive_content = tls_private_key.grafana_server.private_key_pem
-  filename          = "${path.module}/output_files/grafana_server.pem"
+resource "local_file" "grafana_private_key" {
+  sensitive_content = tls_private_key.grafana.private_key_pem
+  filename          = "${local.keys_path}/grafana.pem"
 }
 
-resource "null_resource" "grafana_server_chmod_400_key" {
+resource "null_resource" "grafana_chmod_400_key" {
   provisioner "local-exec" {
-    command = "chmod 400 ${local_file.grafana_server_private_key.filename}"
+    command = "chmod 400 ${local_file.grafana_private_key.filename}"
   }
 }
 
-resource "aws_key_pair" "grafana_server" {
-  key_name   = "grafana_server"
-  public_key = tls_private_key.grafana_server.public_key_openssh
+resource "aws_key_pair" "grafana" {
+  key_name   = "grafana"
+  public_key = tls_private_key.grafana.public_key_openssh
 }
 
+
+# User data.
 data "template_file" "consul_grafana" {
-  template = file("${path.module}/input_files/consul.sh.tpl")
+  template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
       consul_version = var.consul_version
@@ -35,7 +38,7 @@ data "template_file" "consul_grafana" {
 }
 
 data "template_file" "grafana" {
-  template = file("${path.module}/input_files/grafana.sh.tpl")
+  template = file("${local.scripts_path}/grafana.sh")
 }
 
 data "template_cloudinit_config" "grafana" {
@@ -48,41 +51,45 @@ data "template_cloudinit_config" "grafana" {
   }
 }
 
-resource "aws_instance" "grafana_server" {
+
+# Instance.
+resource "aws_instance" "grafana" {
   ami                         = data.aws_ami.ubuntu_18.id
-  instance_type               = "t2.micro"
-  key_name                    = aws_key_pair.grafana_server.key_name
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.grafana.key_name
   subnet_id                   = aws_subnet.private.*.id[1]
-  vpc_security_group_ids      = [aws_security_group.consul_server.id]
+  vpc_security_group_ids      = [aws_security_group.consul.id]
   user_data                   = data.template_cloudinit_config.grafana.rendered
-  iam_instance_profile        = aws_iam_instance_profile.consul_server.name
+  iam_instance_profile        = aws_iam_instance_profile.consul.name
 
   tags = {
-    Name    = "Grafana Server"
+    Name    = "Grafana"
   }
 }
 
-resource "aws_lb" "grafana_server" {
-  name                        = "grafana-lb"
+
+# Load balancer.
+resource "aws_lb" "grafana" {
+  name                        = "grafana"
   internal                    = false
   load_balancer_type          = "application"
   subnets                     = aws_subnet.public.*.id
-  security_groups             = [aws_security_group.consul_server.id]
+  security_groups             = [aws_security_group.consul.id]
 }
 
-resource "aws_lb_listener" "grafana_server" {
-  load_balancer_arn = aws_lb.grafana_server.arn
+resource "aws_lb_listener" "grafana" {
+  load_balancer_arn = aws_lb.grafana.arn
   port               = 80
   protocol           = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.grafana_server.arn
+    target_group_arn = aws_lb_target_group.grafana.arn
   }
 }
 
-resource "aws_lb_target_group" "grafana_server" {
-  name = "grafana-server"
+resource "aws_lb_target_group" "grafana" {
+  name = "grafana"
   port = 3000
   protocol = "HTTP"
   vpc_id = aws_vpc.vpc.id
@@ -94,8 +101,8 @@ resource "aws_lb_target_group" "grafana_server" {
   }
 }
 
-resource "aws_lb_target_group_attachment" "grafana_server" {
-  target_group_arn = aws_lb_target_group.grafana_server.id
-  target_id        = aws_instance.grafana_server.id
+resource "aws_lb_target_group_attachment" "grafana" {
+  target_group_arn = aws_lb_target_group.grafana.id
+  target_id        = aws_instance.grafana.id
   port             = 3000
 }

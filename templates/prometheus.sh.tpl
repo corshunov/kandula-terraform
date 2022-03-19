@@ -7,8 +7,8 @@ mkdir -p ${prometheus_dir}
 tar zxf /tmp/prometheus.tgz -C ${prometheus_dir}
 
 # Create Prometheus configuration
-mkdir -p ${prometheus_conf_dir}
-tee ${prometheus_conf_dir}/prometheus.yml > /dev/null <<EOF
+mkdir -p /etc/prometheus
+tee /etc/prometheus/prometheus.yml > /dev/null <<EOF
 scrape_configs:
   - job_name: 'nodes'
     consul_sd_configs:
@@ -79,7 +79,7 @@ Description=Prometheus Collector
 Requires=network-online.target
 After=network.target
 [Service]
-ExecStart=${prometheus_dir}/prometheus-${prometheus_version}.linux-amd64/prometheus --config.file=${prometheus_conf_dir}/prometheus.yml
+ExecStart=${prometheus_dir}/prometheus-${prometheus_version}.linux-amd64/prometheus --config.file=/etc/prometheus/prometheus.yml
 ExecReload=/bin/kill -s HUP \$MAINPID
 KillSignal=SIGINT
 TimeoutStopSec=5
@@ -91,7 +91,6 @@ systemctl daemon-reload
 systemctl enable prometheus.service
 systemctl start prometheus.service
 
-### add prometheus service to consul
 tee /etc/consul.d/prometheus.json > /dev/null <<"EOF"
 {
   "service": {

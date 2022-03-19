@@ -29,8 +29,8 @@ terraform {
   }
 
   backend "s3" {
-    bucket  = "aleks-terraform"
-    key     = "Kandula_State_Development"
+    bucket  = "kandula-project"
+    key     = "terraform-state"
     region  = "us-east-1"
   }
 }

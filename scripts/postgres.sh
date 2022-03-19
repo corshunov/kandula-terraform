@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-apt-get update
+apt-get update -y
 wget -q -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 
 echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list
 
-apt-get update
+apt-get update -y
 apt-get install -y postgresql-14
 
 systemctl daemon-reload
@@ -47,8 +47,6 @@ systemctl daemon-reload
 systemctl start postgres_exporter
 systemctl enable postgres_exporter
 
-
-### add postgres service to consul
 tee /etc/consul.d/postgres.json > /dev/null <<"EOF"
 {
   "service": {

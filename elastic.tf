@@ -32,8 +32,8 @@ data "template_file" "consul_elastic" {
   }
 }
 
-data "template_file" "elastic" {
-  template = file("${local.scripts_path}/elastic.sh")
+data "local_file" "elastic" {
+  filename = "${local.scripts_path}/elastic.sh"
 }
 
 data "template_cloudinit_config" "elastic" {
@@ -42,7 +42,7 @@ data "template_cloudinit_config" "elastic" {
   }
 
   part {
-    content = data.template_file.elastic.rendered
+    content = data.local_file.elastic.content
   }
 }
 

@@ -57,8 +57,8 @@ data "template_file" "consul_bastion" {
   }
 }
 
-data "template_file" "bastion" {
-  template = file("${local.scripts_path}/bastion.sh")
+data "local_file" "bastion" {
+  filename = "${local.scripts_path}/bastion.sh"
 }
 
 data "template_cloudinit_config" "bastion" {
@@ -67,7 +67,7 @@ data "template_cloudinit_config" "bastion" {
   }
 
   part {
-    content = data.template_file.bastion.rendered
+    content = data.local_file.bastion.content
   }
 }
 

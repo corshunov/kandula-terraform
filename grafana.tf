@@ -32,8 +32,8 @@ data "template_file" "consul_grafana" {
   }
 }
 
-data "template_file" "grafana" {
-  template = file("${local.scripts_path}/grafana.sh")
+data "local_file" "grafana" {
+  filename = "${local.scripts_path}/grafana.sh"
 }
 
 data "template_cloudinit_config" "grafana" {
@@ -42,7 +42,7 @@ data "template_cloudinit_config" "grafana" {
   }
 
   part {
-    content = data.template_file.grafana.rendered
+    content = data.local_file.grafana.content
   }
 }
 

@@ -32,8 +32,8 @@ data "template_file" "consul_postgres" {
   }
 }
 
-data "template_file" "postgres" {
-  template = file("${local.scripts_path}/postgres.sh")
+data "local_file" "postgres" {
+  filename = "${local.scripts_path}/postgres.sh"
 }
 
 data "template_cloudinit_config" "postgres" {
@@ -42,7 +42,7 @@ data "template_cloudinit_config" "postgres" {
   }
 
   part {
-    content = data.template_file.postgres.rendered
+    content = data.local_file.postgres.content
   }
 }
 

@@ -89,8 +89,8 @@ data "template_file" "consul_jenkins_agent" {
   }
 }
 
-data "template_file" "jenkins_agent" {
-  template = file("${local.scripts_path}/jenkins_agent.sh")
+data "local_file" "jenkins_agent" {
+  filename = "${local.scripts_path}/jenkins_agent.sh"
 }
 
 data "template_cloudinit_config" "jenkins_agent" {
@@ -99,7 +99,7 @@ data "template_cloudinit_config" "jenkins_agent" {
   }
 
   part {
-    content = data.template_file.jenkins_agent.rendered
+    content = data.local_file.jenkins_agent.content
   }
 }
 

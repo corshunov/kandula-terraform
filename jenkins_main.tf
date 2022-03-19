@@ -75,8 +75,8 @@ data "template_file" "consul_jenkins_main" {
   }
 }
 
-data "template_file" "jenkins_main" {
-  template = file("${local.scripts_path}/jenkins_main.sh")
+data "local_file" "jenkins_main" {
+  filename = "${local.scripts_path}/jenkins_main.sh"
 }
 
 data "template_cloudinit_config" "jenkins_main" {
@@ -85,7 +85,7 @@ data "template_cloudinit_config" "jenkins_main" {
   }
 
   part {
-    content = data.template_file.jenkins_main.rendered
+    content = data.local_file.jenkins_main.content
   }
 }
 

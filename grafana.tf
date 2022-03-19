@@ -4,15 +4,10 @@ resource "tls_private_key" "grafana" {
   rsa_bits  = 4096
 }
 
-resource "local_file" "grafana_private_key" {
+resource "local_sensitive_file" "grafana_private_key" {
   sensitive_content = tls_private_key.grafana.private_key_pem
   filename          = "${local.keys_path}/grafana.pem"
-}
-
-resource "null_resource" "grafana_chmod_400_key" {
-  provisioner "local-exec" {
-    command = "chmod 400 ${local_file.grafana_private_key.filename}"
-  }
+  file_permission   = "0400"
 }
 
 resource "aws_key_pair" "grafana" {

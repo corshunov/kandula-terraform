@@ -4,15 +4,10 @@ resource "tls_private_key" "consul" {
   rsa_bits  = 4096
 }
 
-resource "local_file" "consul_private_key" {
+resource "local_sensitive_file" "consul_private_key" {
   sensitive_content = tls_private_key.consul.private_key_pem
   filename          = "${local.keys_path}/consul.pem"
-}
-
-resource "null_resource" "consul_chmod_400_key" {
-  provisioner "local-exec" {
-    command = "chmod 400 ${local_file.consul_private_key.filename}"
-  }
+  file_permission   = "0400"
 }
 
 resource "aws_key_pair" "consul" {

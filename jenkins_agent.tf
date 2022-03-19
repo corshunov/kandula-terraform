@@ -4,15 +4,10 @@ resource "tls_private_key" "jenkins_agent" {
   rsa_bits  = 4096
 }
 
-resource "local_file" "jenkins_agent_private_key" {
+resource "local_sensitive_file" "jenkins_agent_private_key" {
   sensitive_content = tls_private_key.jenkins_agent.private_key_pem
   filename          = "${local.keys_path}/jenkins_agent.pem"
-}
-
-resource "null_resource" "jenkins_agent_chmod_400_key" {
-  provisioner "local-exec" {
-    command = "chmod 400 ${local_file.jenkins_agent_private_key.filename}"
-  }
+  file_permission   = "0400"
 }
 
 resource "aws_key_pair" "jenkins_agent" {

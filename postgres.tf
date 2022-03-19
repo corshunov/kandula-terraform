@@ -4,15 +4,10 @@ resource "tls_private_key" "postgres" {
   rsa_bits  = 4096
 }
 
-resource "local_file" "postgres_private_key" {
+resource "local_sensitive_file" "postgres_private_key" {
   sensitive_content = tls_private_key.postgres.private_key_pem
   filename          = "${local.keys_path}/postgres.pem"
-}
-
-resource "null_resource" "postgres_chmod_400_key" {
-  provisioner "local-exec" {
-    command = "chmod 400 ${local_file.postgres_private_key.filename}"
-  }
+  file_permission   = "0400"
 }
 
 resource "aws_key_pair" "postgres" {

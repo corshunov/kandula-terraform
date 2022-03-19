@@ -4,15 +4,10 @@ resource "tls_private_key" "elastic" {
   rsa_bits  = 4096
 }
 
-resource "local_file" "elastic_private_key" {
+resource "local_sensitive_file" "elastic_private_key" {
   sensitive_content = tls_private_key.elastic.private_key_pem
   filename          = "${local.keys_path}/elastic.pem"
-}
-
-resource "null_resource" "elastic_chmod_400_key" {
-  provisioner "local-exec" {
-    command = "chmod 400 ${local_file.elastic_private_key.filename}"
-  }
+  file_permission   = "0400"
 }
 
 resource "aws_key_pair" "elastic" {

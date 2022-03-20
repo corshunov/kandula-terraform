@@ -1,5 +1,9 @@
 data "aws_availability_zones" "available" {}
 
+data "http" "local_ip" {
+  url = "http://ifconfig.me"
+}
+
 data "aws_ami" "ubuntu_18" {
   most_recent = true
   owners      = ["099720109477"]
@@ -18,6 +22,12 @@ data "aws_ami" "ubuntu_18" {
   }
 }
 
-data "http" "local_ip" {
-  url = "http://ifconfig.me"
+data "aws_ami" "jenkins_main" {
+  most_recent = true
+  owners      = ["self"]
+
+  filter {
+    name   = "name"
+    values = ["jenkins-main"]
+  }
 }

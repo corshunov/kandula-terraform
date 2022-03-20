@@ -25,12 +25,12 @@ tee /etc/consul.d/jenkins_agent.json > /dev/null <<"EOF"
     "id": "jenkins_agent",
     "name": "jenkins_agent",
     "tags": ["jenkins_agent"],
-    "port": 443,
+    "port": 22,
     "checks": [
       {
         "id": "tcp",
-        "name": "TCP on port 443",
-        "tcp": "localhost:443",
+        "name": "TCP on port 22",
+        "tcp": "localhost:22",
         "interval": "10s",
         "timeout": "1s"
       }

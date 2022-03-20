@@ -49,7 +49,8 @@ data "template_cloudinit_config" "jenkins_main" {
 
 # Instance.
 resource "aws_instance" "jenkins_main" {
-  ami                         = data.aws_ami.ubuntu_18.id
+  ami                         = data.aws_ami.jenkins_main.id
+  #ami                         = data.aws_ami.ubuntu_18.id
   instance_type               = var.jenkins_main_instance_type
   key_name                    = aws_key_pair.jenkins_main.key_name
   subnet_id                   = aws_subnet.private.*.id[0]
@@ -85,7 +86,7 @@ resource "aws_lb_listener" "jenkins_main" {
 
 resource "aws_lb_target_group" "jenkins_main" {
   name = "jenkins-main"
-  port = 80
+  port = 8080
   protocol = "HTTP"
   vpc_id = aws_vpc.vpc.id
 
@@ -99,5 +100,5 @@ resource "aws_lb_target_group" "jenkins_main" {
 resource "aws_lb_target_group_attachment" "jenkins" {
   target_group_arn = aws_lb_target_group.jenkins_main.id
   target_id        = aws_instance.jenkins_main.id
-  port             = 80
+  port             = 8080
 }

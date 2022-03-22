@@ -15,7 +15,7 @@ systemctl daemon-reload
 systemctl enable grafana-server.service
 systemctl start grafana-server.service
 
-tee /etc/consul.d/grafana.json > /dev/null <<"EOF"
+tee /etc/consul.d/grafana.json > /dev/null <<EOF
 {
   "service": {
     "id": "grafana",

@@ -22,12 +22,17 @@ scrape_configs:
       target_label: 'instance'
 
   - job_name: 'prometheus'
-    static_configs:
-    - targets: ['localhost:9090']
+    consul_sd_configs:
+    - server: 'localhost:8500'
+      services:
+      - prometheus
     relabel_configs:
     - source_labels: ['__address__']
+      target_label: '__address__'
+      regex: '(.*):(.*)'
+      replacement: '\$${1}:9090'
+    - source_labels: ['__meta_consul_node']
       target_label: 'instance'
-      replacement: 'prometheus'
 
   - job_name: 'consul'
     metrics_path: '/v1/agent/metrics'
@@ -55,9 +60,8 @@ scrape_configs:
       target_label: '__address__'
       regex: '(.*):(.*)'
       replacement: '\$${1}:3000'
-    - source_labels: ['__address__']
+    - source_labels: ['__meta_consul_node']
       target_label: 'instance'
-      replacement: 'grafana'
 
   - job_name: 'postgres'
     consul_sd_configs:
@@ -69,9 +73,50 @@ scrape_configs:
       target_label: '__address__'
       regex: '(.*):(.*)'
       replacement: '\$${1}:9187'
-    - source_labels: ['__address__']
+    - source_labels: ['__meta_consul_node']
       target_label: 'instance'
-      replacement: 'postgres'
+
+  - job_name: 'elasticsearch'
+    scrape_timeout: 30s
+    consul_sd_configs:
+    - server: 'localhost:8500'
+      services:
+      - elasticsearch
+    relabel_configs:
+    - source_labels: ['__address__']
+      target_label: '__address__'
+      regex: '(.*):(.*)'
+      replacement: '\$${1}:9114'
+    - source_labels: ['__meta_consul_node']
+      target_label: 'instance'
+
+  - job_name: 'kibana'
+    metrics_path: '/_prometheus/metrics'
+    consul_sd_configs:
+    - server: 'localhost:8500'
+      services:
+      - kibana
+    relabel_configs:
+    - source_labels: ['__address__']
+      target_label: '__address__'
+      regex: '(.*):(.*)'
+      replacement: '\$${1}:5601'
+    - source_labels: ['__meta_consul_node']
+      target_label: 'instance'
+
+  - job_name: 'jenkins_main'
+    metrics_path: '/prometheus'
+    consul_sd_configs:
+    - server: 'localhost:8500'
+      services:
+      - jenkins_main
+    relabel_configs:
+    - source_labels: ['__address__']
+      target_label: '__address__'
+      regex: '(.*):(.*)'
+      replacement: '\$${1}:8080'
+    - source_labels: ['__meta_consul_node']
+      target_label: 'instance'
 EOF
 
 # Configure promcol service
@@ -93,7 +138,7 @@ systemctl daemon-reload
 systemctl enable prometheus.service
 systemctl start prometheus.service
 
-tee /etc/consul.d/prometheus.json > /dev/null <<"EOF"
+tee /etc/consul.d/prometheus.json > /dev/null <<EOF
 {
   "service": {
     "id": "prometheus",

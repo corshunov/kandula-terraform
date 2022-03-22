@@ -28,6 +28,11 @@ variable "elasticsearch_instance_type" {
   default = "t3.medium"
 }
 
+variable "kibana_instance_type" {
+  type    = string
+  default = "t3.medium"
+}
+
 variable "jenkins_main_instance_type" {
   type    = string
   default = "t2.micro"

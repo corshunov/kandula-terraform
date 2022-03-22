@@ -3,7 +3,7 @@ set -e
 
 apt-get update -y
 
-tee /etc/consul.d/bastion.json > /dev/null <<"EOF"
+tee /etc/consul.d/bastion.json > /dev/null <<EOF
 {
   "service": {
     "id": "bastion",

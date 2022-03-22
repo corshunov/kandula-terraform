@@ -19,7 +19,7 @@ systemctl enable docker
 
 apt-get install -y kubectl awscli git openjdk-8-jdk
 
-tee /etc/consul.d/jenkins_agent.json > /dev/null <<"EOF"
+tee /etc/consul.d/jenkins_agent.json > /dev/null <<EOF
 {
   "service": {
     "id": "jenkins_agent",

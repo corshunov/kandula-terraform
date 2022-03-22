@@ -56,7 +56,7 @@ useradd consul
 chown -R consul:consul /opt/consul /etc/consul.d /run/consul
 
 # Configure consul service
-tee /etc/systemd/system/consul.service > /dev/null <<"EOF"
+tee /etc/systemd/system/consul.service > /dev/null <<EOF
 [Unit]
 Description=Consul service discovery agent
 Requires=network-online.target

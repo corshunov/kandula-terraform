@@ -15,7 +15,7 @@ output "jenkins_main_dns" {
 }
 
 output "kibana_dns" {
-  value = aws_lb.elasticsearch.dns_name
+  value = aws_lb.kibana.dns_name
 }
 
 output "bastion_ip" {

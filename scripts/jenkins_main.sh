@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-tee /etc/consul.d/jenkins_main.json > /dev/null <<"EOF"
+tee /etc/consul.d/jenkins_main.json > /dev/null <<EOF
 {
   "service": {
     "id": "jenkins_main",

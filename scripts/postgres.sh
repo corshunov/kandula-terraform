@@ -47,7 +47,7 @@ systemctl daemon-reload
 systemctl start postgres_exporter
 systemctl enable postgres_exporter
 
-tee /etc/consul.d/postgres.json > /dev/null <<"EOF"
+tee /etc/consul.d/postgres.json > /dev/null <<EOF
 {
   "service": {
     "id": "postgres",

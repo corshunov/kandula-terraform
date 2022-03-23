@@ -21,19 +21,28 @@ data "template_file" "consul_jenkins_main" {
   template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
-      consul_version = var.consul_version
-      node_exporter_version = var.node_exporter_version
-      prometheus_dir = var.prometheus_dir
-      config = <<EOF
-       "node_name": "jenkins_main",
-       "enable_script_checks": true,
-       "server": false
-      EOF
+    consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key 
+    node_exporter_version = var.node_exporter_version
+    prometheus_dir = var.prometheus_dir
+    config = <<EOF
+"node_name": "jenkins_main",
+"enable_script_checks": true,
+"server": false
+    EOF
   }
 }
 
 data "local_file" "jenkins_main" {
   filename = "${local.scripts_path}/jenkins_main.sh"
+}
+
+data "template_file" "filebeat_jenkins_main" {
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "jenkins_main"
+  }
 }
 
 data "template_cloudinit_config" "jenkins_main" {
@@ -43,6 +52,10 @@ data "template_cloudinit_config" "jenkins_main" {
 
   part {
     content = data.local_file.jenkins_main.content
+  }
+
+  part {
+    content = data.template_file.filebeat_jenkins_main.rendered
   }
 }
 
@@ -61,6 +74,10 @@ resource "aws_instance" "jenkins_main" {
   tags = {
     Name    = "Jenkins Main"
   }
+
+  depends_on = [
+    aws_route.public, aws_route.private
+  ]
 }
 
 

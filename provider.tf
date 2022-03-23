@@ -20,6 +20,8 @@ terraform {
     bucket  = "kandula-project"
     key     = "terraform-state"
     region  = "us-east-1"
+    acl     = "private"
+    encrypt = true
   }
 }
 

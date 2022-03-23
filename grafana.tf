@@ -21,19 +21,28 @@ data "template_file" "consul_grafana" {
   template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
-      consul_version = var.consul_version
-      node_exporter_version = var.node_exporter_version
-      prometheus_dir = var.prometheus_dir
-      config = <<EOF
-       "node_name": "grafana",
-       "enable_script_checks": true,
-       "server": false
-      EOF
+    consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key
+    node_exporter_version = var.node_exporter_version
+    prometheus_dir = var.prometheus_dir
+    config = <<EOF
+"node_name": "grafana",
+"enable_script_checks": true,
+"server": false
+    EOF
   }
 }
 
 data "local_file" "grafana" {
   filename = "${local.scripts_path}/grafana.sh"
+}
+
+data "template_file" "filebeat_grafana" {
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "grafana"
+  }
 }
 
 data "template_cloudinit_config" "grafana" {
@@ -43,6 +52,10 @@ data "template_cloudinit_config" "grafana" {
 
   part {
     content = data.local_file.grafana.content
+  }
+
+  part {
+    content = data.template_file.filebeat_grafana.rendered
   }
 }
 
@@ -60,6 +73,10 @@ resource "aws_instance" "grafana" {
   tags = {
     Name    = "Grafana"
   }
+
+  depends_on = [
+    aws_route.public, aws_route.private
+  ]
 }
 
 

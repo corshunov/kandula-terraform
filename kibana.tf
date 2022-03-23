@@ -21,19 +21,28 @@ data "template_file" "consul_kibana" {
   template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
-      consul_version = var.consul_version
-      node_exporter_version = var.node_exporter_version
-      prometheus_dir = var.prometheus_dir
-      config = <<EOF
-       "node_name": "kibana",
-       "enable_script_checks": true,
-       "server": false
-      EOF
+    consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key
+    node_exporter_version = var.node_exporter_version
+    prometheus_dir = var.prometheus_dir
+    config = <<EOF
+"node_name": "kibana",
+"enable_script_checks": true,
+"server": false
+    EOF
   }
 }
 
 data "local_file" "kibana" {
   filename = "${local.scripts_path}/kibana.sh"
+}
+
+data "template_file" "filebeat_kibana" {
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "kibana"
+  }
 }
 
 data "template_cloudinit_config" "kibana" {
@@ -43,6 +52,10 @@ data "template_cloudinit_config" "kibana" {
 
   part {
     content = data.local_file.kibana.content
+  }
+
+  part {
+    content = data.template_file.filebeat_kibana.rendered
   }
 }
 
@@ -60,6 +73,10 @@ resource "aws_instance" "kibana" {
   tags = {
     Name    = "Kibana"
   }
+
+  depends_on = [
+    aws_route.public, aws_route.private
+  ]
 }
 
 

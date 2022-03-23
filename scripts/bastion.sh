@@ -2,6 +2,7 @@
 set -e
 
 apt-get update -y
+apt-get install -y postgresql-client
 
 tee /etc/consul.d/bastion.json > /dev/null <<EOF
 {

@@ -21,14 +21,15 @@ data "template_file" "consul_prometheus" {
   template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
-      consul_version = var.consul_version
-      node_exporter_version = var.node_exporter_version
-      prometheus_dir = var.prometheus_dir
-      config = <<EOF
-       "node_name": "prometheus",
-       "enable_script_checks": true,
-       "server": false
-      EOF
+    consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key
+    node_exporter_version = var.node_exporter_version
+    prometheus_dir = var.prometheus_dir
+    config = <<EOF
+"node_name": "prometheus",
+"enable_script_checks": true,
+"server": false
+    EOF
   }
 }
 
@@ -41,6 +42,14 @@ data "template_file" "prometheus" {
   }
 }
 
+data "template_file" "filebeat_prometheus" {
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "prometheus"
+  }
+}
+
 data "template_cloudinit_config" "prometheus" {
   part {
     content = data.template_file.consul_prometheus.rendered
@@ -48,6 +57,10 @@ data "template_cloudinit_config" "prometheus" {
 
   part {
     content = data.template_file.prometheus.rendered
+  }
+
+  part {
+    content = data.template_file.filebeat_prometheus.rendered
   }
 }
 
@@ -65,6 +78,10 @@ resource "aws_instance" "prometheus" {
   tags = {
     Name    = "Prometheus"
   }
+
+  depends_on = [
+    aws_route.public, aws_route.private
+  ]
 }
 
 

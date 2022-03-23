@@ -43,3 +43,16 @@ tee /etc/consul.d/kibana.json > /dev/null <<EOF
 EOF
 
 consul reload
+
+curl -X POST \
+  localhost:5601/api/index_patterns/index_pattern \
+  -H 'Content-Type: application/json' \
+  -H 'kbn-xsrf: true' \
+  -d '{
+  "override": true,
+  "refresh_fields": true,
+  "index_pattern": {
+     "title": "filebeat-*",
+     "timeFieldName": "@timestamp"
+  }
+}'

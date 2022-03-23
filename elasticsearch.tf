@@ -21,19 +21,28 @@ data "template_file" "consul_elasticsearch" {
   template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
-      consul_version = var.consul_version
-      node_exporter_version = var.node_exporter_version
-      prometheus_dir = var.prometheus_dir
-      config = <<EOF
-       "node_name": "elasticsearch",
-       "enable_script_checks": true,
-       "server": false
-      EOF
+    consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key
+    node_exporter_version = var.node_exporter_version
+    prometheus_dir = var.prometheus_dir
+    config = <<EOF
+"node_name": "elasticsearch",
+"enable_script_checks": true,
+"server": false
+    EOF
   }
 }
 
 data "local_file" "elasticsearch" {
   filename = "${local.scripts_path}/elasticsearch.sh"
+}
+
+data "template_file" "filebeat_elasticsearch" {
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "elasticsearch"
+  }
 }
 
 data "template_cloudinit_config" "elasticsearch" {
@@ -43,6 +52,10 @@ data "template_cloudinit_config" "elasticsearch" {
 
   part {
     content = data.local_file.elasticsearch.content
+  }
+
+  part {
+    content = data.template_file.filebeat_elasticsearch.rendered
   }
 }
 
@@ -60,4 +73,8 @@ resource "aws_instance" "elasticsearch" {
   tags = {
     Name    = "ElasticSearch"
   }
+
+  depends_on = [
+    aws_route.public, aws_route.private
+  ]
 }

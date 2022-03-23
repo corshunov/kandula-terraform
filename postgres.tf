@@ -21,19 +21,33 @@ data "template_file" "consul_postgres" {
   template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
-      consul_version = var.consul_version
-      node_exporter_version = var.node_exporter_version
-      prometheus_dir = var.prometheus_dir
-      config = <<EOF
-       "node_name": "postgres",
-       "enable_script_checks": true,
-       "server": false
-      EOF
+    consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key
+    node_exporter_version = var.node_exporter_version
+    prometheus_dir = var.prometheus_dir
+    config = <<EOF
+"node_name": "postgres",
+"enable_script_checks": true,
+"server": false
+    EOF
   }
 }
 
-data "local_file" "postgres" {
-  filename = "${local.scripts_path}/postgres.sh"
+data "template_file" "postgres" {
+  template = file("${local.templates_path}/postgres.sh.tpl")
+
+  vars = {
+    postgres_admin_password = var.postgres_admin_password
+    postgres_kandula_password = var.postgres_kandula_password
+  }
+}
+
+data "template_file" "filebeat_postgres" {
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "postgres"
+  }
 }
 
 data "template_cloudinit_config" "postgres" {
@@ -42,7 +56,11 @@ data "template_cloudinit_config" "postgres" {
   }
 
   part {
-    content = data.local_file.postgres.content
+    content = data.template_file.postgres.rendered
+  }
+
+  part {
+    content = data.template_file.filebeat_postgres.rendered
   }
 }
 
@@ -60,4 +78,8 @@ resource "aws_instance" "postgres" {
   tags = {
     Name    = "Postgres"
   }
+
+  depends_on = [
+    aws_instance.consul
+  ]
 }

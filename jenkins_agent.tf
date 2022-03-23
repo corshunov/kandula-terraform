@@ -22,20 +22,30 @@ data "template_file" "consul_jenkins_agent" {
   template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
-      consul_version = var.consul_version
-      node_exporter_version = var.node_exporter_version
-      prometheus_dir = var.prometheus_dir
-      config = <<EOF
-       "node_name": "jenkins-agent-${count.index+1}",
-       "enable_script_checks": true,
-       "server": false
-      EOF
+    consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key
+    node_exporter_version = var.node_exporter_version
+    prometheus_dir = var.prometheus_dir
+    config = <<EOF
+"node_name": "jenkins-agent-${count.index+1}",
+"enable_script_checks": true,
+"server": false
+    EOF
   }
 }
 
 data "local_file" "jenkins_agent" {
   count    = var.jenkins_agent_count
   filename = "${local.scripts_path}/jenkins_agent.sh"
+}
+
+data "template_file" "filebeat_jenkins_agent" {
+  count    = var.jenkins_agent_count
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "jenkins_agent"
+  }
 }
 
 data "template_cloudinit_config" "jenkins_agent" {
@@ -46,6 +56,10 @@ data "template_cloudinit_config" "jenkins_agent" {
 
   part {
     content = data.local_file.jenkins_agent.*.content[count.index]
+  }
+
+  part {
+    content = data.template_file.filebeat_jenkins_agent.*.rendered[count.index]
   }
 }
 
@@ -64,4 +78,8 @@ resource "aws_instance" "jenkins_agent" {
   tags = {
     Name = "Jenkins Agent ${count.index+1}"
   }
+
+  depends_on = [
+    aws_route.public, aws_route.private
+  ]
 }

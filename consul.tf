@@ -66,18 +66,39 @@ data "template_file" "consul" {
 
   vars = {
     consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key
     node_exporter_version = var.node_exporter_version
     prometheus_dir = var.prometheus_dir
     config = <<EOF
-      "node_name": "consul-${count.index+1}",
-      "server": true,
-      "bootstrap_expect": 3,
-      "ui": true,
-      "client_addr": "0.0.0.0",
-      "telemetry": {
-        "prometheus_retention_time": "10m"
-      }
-EOF
+"node_name": "consul-${count.index+1}",
+"server": true,
+"bootstrap_expect": 3,
+"ui": true,
+"client_addr": "0.0.0.0",
+"telemetry": {
+   "prometheus_retention_time": "10m"
+}
+    EOF
+  }
+}
+
+data "template_file" "filebeat_consul" {
+  count    = var.consul_count
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "consul"
+  }
+}
+
+data "template_cloudinit_config" "consul" {
+  count    = var.consul_count
+  part {
+    content = data.template_file.consul.*.rendered[count.index]
+  }
+
+  part {
+    content = data.template_file.filebeat_consul.*.rendered[count.index]
   }
 }
 
@@ -90,7 +111,7 @@ resource "aws_instance" "consul" {
   key_name               = aws_key_pair.consul.key_name
   subnet_id              = aws_subnet.private.*.id[count.index % var.az_count]
   vpc_security_group_ids = [aws_security_group.consul.id]
-  user_data              = data.template_file.consul.*.rendered[count.index]
+  user_data              = data.template_cloudinit_config.consul.*.rendered[count.index]
   iam_instance_profile   = aws_iam_instance_profile.consul.name
 
   tags = {
@@ -99,7 +120,7 @@ resource "aws_instance" "consul" {
   }
 
   depends_on = [
-    aws_route_table_association.public, aws_route_table_association.private
+    aws_route.public, aws_route.private
   ]
 }
 

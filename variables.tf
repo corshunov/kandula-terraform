@@ -20,7 +20,7 @@ variable "bastion_instance_type" {
 
 variable "consul_instance_type" {
   type    = string
-  default = "t2.micro"
+  default = "t3.medium"
 }
 
 variable "elasticsearch_instance_type" {
@@ -35,7 +35,7 @@ variable "kibana_instance_type" {
 
 variable "jenkins_main_instance_type" {
   type    = string
-  default = "t2.micro"
+  default = "t3.medium"
 }
 
 variable "jenkins_agent_instance_type" {
@@ -50,12 +50,12 @@ variable "grafana_instance_type" {
 
 variable "postgres_instance_type" {
   type    = string
-  default = "t2.micro"
+  default = "t3.medium"
 }
 
 variable "prometheus_instance_type" {
   type    = string
-  default = "t2.micro"
+  default = "t3.medium"
 }
 
 variable "consul_count" {
@@ -86,4 +86,19 @@ variable "prometheus_version" {
 variable "prometheus_dir" {
   type    = string
   default = "/opt/prometheus"
+}
+
+variable "consul_encrypt_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "postgres_admin_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "postgres_kandula_password" {
+  type    = string
+  sensitive = true
 }

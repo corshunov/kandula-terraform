@@ -14,8 +14,8 @@ apt-get update -y
 apt-get install -y docker.io
 
 usermod -aG docker ubuntu
-systemctl start docker
 systemctl enable docker
+systemctl start docker
 
 apt-get install -y kubectl awscli git openjdk-8-jdk
 

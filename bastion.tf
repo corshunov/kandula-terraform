@@ -37,19 +37,28 @@ data "template_file" "consul_bastion" {
   template = file("${local.templates_path}/consul.sh.tpl")
 
   vars = {
-      consul_version = var.consul_version
-      node_exporter_version = var.node_exporter_version
-      prometheus_dir = var.prometheus_dir
-      config = <<EOF
-       "node_name": "bastion",
-       "enable_script_checks": true,
-       "server": false
-      EOF
+    consul_version = var.consul_version
+    consul_encrypt_key = var.consul_encrypt_key
+    node_exporter_version = var.node_exporter_version
+    prometheus_dir = var.prometheus_dir
+    config = <<EOF
+"node_name": "bastion",
+"enable_script_checks": true,
+"server": false
+    EOF
   }
 }
 
 data "local_file" "bastion" {
   filename = "${local.scripts_path}/bastion.sh"
+}
+
+data "template_file" "filebeat_bastion" {
+  template = file("${local.templates_path}/filebeat.sh.tpl")
+
+  vars = {
+      servname = "bastion"
+  }
 }
 
 data "template_cloudinit_config" "bastion" {
@@ -59,6 +68,10 @@ data "template_cloudinit_config" "bastion" {
 
   part {
     content = data.local_file.bastion.content
+  }
+
+  part {
+    content = data.template_file.filebeat_bastion.rendered
   }
 }
 
@@ -77,4 +90,8 @@ resource "aws_instance" "bastion" {
   tags = {
     Name    = "Bastion"
   }
+
+  depends_on = [
+    aws_route.public, aws_route.private
+  ]
 }

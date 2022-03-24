@@ -88,6 +88,16 @@ variable "prometheus_dir" {
   default = "/opt/prometheus"
 }
 
+variable "jenkins_main_ami_account" {
+  type    = string
+  default = "self"
+}
+
+variable "jenkins_main_ami_name" {
+  type    = string
+  default = "jenkins-main"
+}
+
 variable "consul_encrypt_key" {
   type      = string
   sensitive = true

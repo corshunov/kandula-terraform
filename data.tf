@@ -24,10 +24,10 @@ data "aws_ami" "ubuntu_18" {
 
 data "aws_ami" "jenkins_main" {
   most_recent = true
-  owners      = ["self"]
+  owners      = [var.jenkins_main_ami_account]
 
   filter {
     name   = "name"
-    values = ["jenkins-main"]
+    values = [var.jenkins_main_ami_name]
   }
 }

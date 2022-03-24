@@ -25,20 +25,20 @@ psql -c "CREATE USER kandula WITH ENCRYPTED PASSWORD '${postgres_kandula_passwor
 psql -c "CREATE DATABASE kandula"
 psql <<EOF2 kandula
 CREATE TABLE plan_shutdown (
-    id                INT NOT NULL PRIMARY KEY,
-    instance_name     VARCHAR(25),
-    shutdown_time     TIME
+    instance_id       VARCHAR(50),
+    time              TIME
 );
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON plan_shutdown TO kandula;
 
 CREATE TABLE done_shutdown (
-    id                INT NOT NULL PRIMARY KEY,
+    id                SERIAL PRIMARY KEY,
     timestamp         TIMESTAMP NOT NULL DEFAULT current_timestamp,
-    instance_name     VARCHAR(25)
+    instance_id       VARCHAR(25)
 );
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON done_shutdown TO kandula;
+GRANT USAGE, SELECT ON SEQUENCE done_shutdown_id_seq TO kandula;
 EOF2
 EOF1
 

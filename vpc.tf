@@ -1,6 +1,10 @@
 resource "aws_vpc" "vpc" {
   cidr_block = var.vpc_cidr
   enable_dns_hostnames = false
+
+  tags = {
+    "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+  }
 }
 
 resource "aws_subnet" "public" {
@@ -9,6 +13,11 @@ resource "aws_subnet" "public" {
   cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index+1)
   vpc_id                  = aws_vpc.vpc.id
   availability_zone       = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                          = "1"
+  }
 }
 
 resource "aws_subnet" "private" {
@@ -17,14 +26,27 @@ resource "aws_subnet" "private" {
   cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index+101)
   vpc_id                  = aws_vpc.vpc.id
   availability_zone       = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"                 = "1"
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id     = aws_vpc.vpc.id
+
+  tags = {
+    "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+  }
 }
 
 resource "aws_eip" "nat_eip" {
   count      = var.az_count
+
+  tags = {
+    "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+  }
 }
 
 resource "aws_nat_gateway" "nat" {
@@ -32,11 +54,19 @@ resource "aws_nat_gateway" "nat" {
   allocation_id     = aws_eip.nat_eip.*.id[count.index]
   subnet_id         = aws_subnet.public.*.id[count.index]
 
+  tags = {
+    "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+  }
+
   depends_on = [aws_internet_gateway.igw]
 }
 
 resource "aws_route_table" "public" {
   vpc_id                  = aws_vpc.vpc.id
+
+  tags = {
+    "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+  }
 }
 
 resource "aws_route" "public" {
@@ -54,6 +84,10 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   count                   = var.az_count
   vpc_id                  = aws_vpc.vpc.id
+
+  tags = {
+    "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+  }
 }
 
 resource "aws_route" "private" {

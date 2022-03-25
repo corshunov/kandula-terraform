@@ -18,6 +18,14 @@ output "kibana_dns" {
   value = aws_lb.kibana.dns_name
 }
 
+output "eks_cluster_endpoint" {
+  value = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_name" {
+  value = local.eks_cluster_name
+}
+
 output "bastion_ip" {
   value = aws_instance.bastion.public_ip
 }

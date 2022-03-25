@@ -73,7 +73,7 @@ resource "aws_instance" "postgres" {
   subnet_id                   = aws_subnet.private.*.id[0]
   vpc_security_group_ids      = [aws_security_group.consul.id]
   user_data                   = data.template_cloudinit_config.postgres.rendered
-  iam_instance_profile        = aws_iam_instance_profile.consul.name
+  iam_instance_profile        = aws_iam_instance_profile.postgres.name
 
   tags = {
     Name    = "Postgres"

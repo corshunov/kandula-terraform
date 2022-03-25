@@ -4,9 +4,14 @@ resource "aws_iam_policy" "describe_instances" {
   policy      = file("${local.policies_path}/describe_instances.json")
 }
 
-resource "aws_iam_policy" "eks" {
-  name        = "eks"
-  policy      = file("${local.policies_path}/eks.json")
+resource "aws_iam_policy" "terminate_instances" {
+  name        = "terminate-instances"
+  policy      = file("${local.policies_path}/terminate_instances.json")
+}
+
+resource "aws_iam_policy" "full_eks" {
+  name        = "full_eks"
+  policy      = file("${local.policies_path}/full_eks.json")
 }
 
 
@@ -33,10 +38,27 @@ resource "aws_iam_policy_attachment" "jenkins_agent_describe_instances" {
   policy_arn = aws_iam_policy.describe_instances.arn
 }
 
-resource "aws_iam_policy_attachment" "jenkins_agent_eks" {
-  name       = "jenkins-agent-eks"
+resource "aws_iam_policy_attachment" "jenkins_agent_full_eks" {
+  name       = "jenkins-agent-full-eks"
   roles      = [aws_iam_role.jenkins_agent.name]
-  policy_arn = aws_iam_policy.eks.arn
+  policy_arn = aws_iam_policy.full_eks.arn
+}
+
+resource "aws_iam_role" "postgres" {
+  name               = "postgres"
+  assume_role_policy = file("${local.policies_path}/assume_role.json")
+}
+
+resource "aws_iam_policy_attachment" "postgres_describe_instances" {
+  name       = "postgres-describe-instances"
+  roles      = [aws_iam_role.postgres.name]
+  policy_arn = aws_iam_policy.describe_instances.arn
+}
+
+resource "aws_iam_policy_attachment" "postgres_terminate_instances" {
+  name       = "postgres-terminate-instances"
+  roles      = [aws_iam_role.postgres.name]
+  policy_arn = aws_iam_policy.terminate_instances.arn
 }
 
 
@@ -49,4 +71,9 @@ resource "aws_iam_instance_profile" "consul" {
 resource "aws_iam_instance_profile" "jenkins_agent" {
   name  = "jenkins_agent"
   role = aws_iam_role.jenkins_agent.name
+}
+
+resource "aws_iam_instance_profile" "postgres" {
+  name  = "postgres"
+  role = aws_iam_role.postgres.name
 }

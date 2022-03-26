@@ -15,7 +15,6 @@ variable "az_count" {
 
 variable "bastion_instance_type" {
   type    = string
-  #default = "t2.micro"
   default = "t3.medium"
 }
 
@@ -41,13 +40,11 @@ variable "jenkins_main_instance_type" {
 
 variable "jenkins_agent_instance_type" {
   type    = string
-  #default = "t2.micro"
   default = "t3.medium"
 }
 
 variable "grafana_instance_type" {
   type    = string
-  #default = "t2.micro"
   default = "t3.medium"
 }
 
@@ -88,19 +85,16 @@ variable "k8s_version" {
 
 variable "consul_version" {
   type    = string
-  #default = "1.4.0"
   default = "1.11.4"
 }
 
 variable "node_exporter_version" {
   type    = string
-  #default = "0.18.1"
   default = "1.3.1"
 }
 
 variable "prometheus_version" {
   type    = string
-  #default = "2.16.0"
   default = "2.34.0"
 }
 
@@ -119,6 +113,16 @@ variable "jenkins_main_ami_name" {
   default = "jenkins-main"
 }
 
+variable "k8s_service_account_namespace" {
+  type    = string
+  default = "default"
+}
+
+variable "k8s_service_account_name" {
+  type    = string
+  default = "kandula"
+}
+
 variable "consul_encrypt_key" {
   type      = string
   sensitive = true
@@ -130,6 +134,21 @@ variable "postgres_admin_password" {
 }
 
 variable "postgres_kandula_password" {
+  type    = string
+  sensitive = true
+}
+
+variable "flask_secret_key" {
+  type    = string
+  sensitive = true
+}
+
+variable "kandula_aws_secret_access_key" {
+  type    = string
+  sensitive = true
+}
+
+variable "kandula_aws_access_key_id" {
   type    = string
   sensitive = true
 }

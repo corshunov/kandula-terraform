@@ -5,6 +5,4 @@ locals {
   keys_path                     = "${path.module}/keys"
 
   eks_cluster_name              = "kandula-${random_string.eks_cluster_name_suffix.result}"
-  k8s_service_account_namespace = "default"
-  k8s_service_account_name      = "kandula"
 }

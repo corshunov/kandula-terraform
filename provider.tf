@@ -40,11 +40,11 @@ terraform {
 provider "aws" {
   region  = var.aws_region
 
-  default_tags {
-    tags = {
-      Project = "kandula"
-    }
-  }
+#  default_tags {
+#    tags = {
+#      Project = "kandula"
+#    }
+#  }
 }
 
 provider "kubernetes" {

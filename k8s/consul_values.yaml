@@ -1,0 +1,19 @@
+global:
+  enabled: false
+  image: "hashicorp/consul:1.11.4"
+  datacenter: kandula
+  gossipEncryption:
+    secretName: "kandula-secrets"
+    secretKey: "consul_encrypt_key"
+client:
+  enabled: true
+  exposeGossipPorts: true
+  join:
+    - "provider=aws tag_key=consul_server tag_value=true"
+  # affinity: null
+dns:
+  # @type: boolean
+  enabled: true
+  clusterIP: "172.20.10.10"
+syncCatalog:
+  enabled: true

@@ -49,6 +49,15 @@ resource "aws_security_group_rule" "consul_8080_inside_ingress" {
   security_group_id = aws_security_group.consul.id
 }
 
+resource "aws_security_group_rule" "consul_https_inside_ingress" {
+  type        = "ingress"
+  protocol    = "tcp"
+  from_port   = 443
+  to_port     = 443
+  cidr_blocks = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.consul.id
+}
+
 resource "aws_security_group_rule" "consul_all_egress" {
   type        = "egress"
   protocol    = -1
@@ -134,14 +143,31 @@ resource "aws_lb" "consul" {
   security_groups             = [aws_security_group.consul.id]
 }
 
-resource "aws_lb_listener" "consul" {
+resource "aws_lb_listener" "consul_https" {
   load_balancer_arn = aws_lb.consul.arn
-  port               = 80
-  protocol           = "HTTP"
+  port              = 443
+  protocol          = "HTTPS"
+  certificate_arn   = aws_iam_server_certificate.kandula_cert.arn
 
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.consul.arn
+  }
+}
+
+resource "aws_alb_listener" "consul_http" {
+  load_balancer_arn = aws_lb.consul.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = 443
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
   }
 }
 

@@ -3,11 +3,15 @@ set -e
 
 apt-get update -y
 
-apt-get install -y apt-transport-https ca-certificates curl
+apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
 
 curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
+
+echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | tee -a /etc/apt/sources.list.d/trivy.list
 
 apt-get update -y
 
@@ -16,6 +20,12 @@ apt-get install -y docker.io
 usermod -aG docker ubuntu
 systemctl enable docker
 systemctl start docker
+
+apt-get install -y trivy
+
+trivy image --download-db-only
+
+apt-get install -y python3-pip
 
 apt-get install -y kubectl awscli git openjdk-8-jdk
 

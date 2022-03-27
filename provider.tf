@@ -17,14 +17,24 @@ terraform {
       version = "2.2.0"
     }
 
+    tls = {
+      source  = "hashicorp/tls"
+      version = "3.1.0"
+    }
+
     random = {
       source  = "hashicorp/random"
       version = "3.1.2"
     }
 
     kubernetes = {
-      source = "hashicorp/kubernetes"
+      source  = "hashicorp/kubernetes"
       version = "2.9.0"
+    }
+
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "1.14.0"
     }
   }
 
@@ -51,4 +61,19 @@ provider "kubernetes" {
   host                   = data.aws_eks_cluster.eks.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.eks.token
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = data.aws_eks_cluster.eks.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.eks.token
+  }
+}
+
+provider "kubectl" {
+    host                   = data.aws_eks_cluster.eks.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.eks.token
+    load_config_file       = false
 }
